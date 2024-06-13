@@ -6,16 +6,9 @@ const abc=require("./Routes/Createuser")
 const cors=require('cors')
 //console.log(app);
 
-app.use(cors(
-    {
-        origin:["https://justeatind-akshat-kumar-guptas-projects.vercel.app"],
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-        allowedHeaders: 'Content-Type,Authorization', 
-        credentials:true
-    }
-))
+app.use(cors())
 app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "https://justeatind-akshat-kumar-guptas-projects.vercel.app"); // Allow requests from any origin
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
     res.header(
         "Access-Control-Allow-Methods",
         "GET, POST, OPTIONS, PUT, PATCH, DELETE"
@@ -28,7 +21,9 @@ app.use((req, res, next) => {
 });
 
 
-
+app.get('/',(req,res)=>{
+    res.send('yes thoda sa hua')
+})
 app.get('/funny',(req,res)=>{
     res.send('Hahahaha')
 })
