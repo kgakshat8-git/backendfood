@@ -1,0 +1,52 @@
+const express = require("express");
+const router = express.Router();
+const order = require("../models/Orders");
+
+router.post("/orderdata", async (req, res) => {
+  let data = req.body.order_data;
+  data.unshift({ Order_date: req.body.order_date });
+  console.log(Array.isArray(data))
+  let email = await order.findOne({ email: req.body.email });
+  //console.log(email);
+  if (email === null) {
+    try {
+      await order
+        .create({
+          email: req.body.email,
+          order_data: [data],
+        })
+        .then(() => {
+          res.json({ success: true });
+        });
+    } catch (error) {
+      console.log(error.message);
+      res.send("Server Error", error.message);
+    }
+  } else {
+    try {
+      
+      await order.findOneAndUpdate(
+        { 'email': req.body.email },
+        {
+           $push: { order_data: { $each: [data] } }
+        }
+      );
+      res.json({ success: true });
+    } catch (err) {
+      res.send(err.message);
+    }
+  }
+});
+
+router.post('/dispmyorder',async(req,res)=>{
+    let mail=req.body.mail
+    //console.log(mail);
+    let pastorder=await order.findOne({email:mail})
+    if(pastorder===null)
+        console.log("sab khatam");
+    res.json({order:pastorder});
+
+})
+
+
+module.exports = router;
