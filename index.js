@@ -8,7 +8,7 @@ const { OAuth2Client } = require('google-auth-library'); // being used for g-ver
 require('dotenv').config();
 const User=require('./models/User');
 const jwt=require("jsonwebtoken")
-
+const { createProxyMiddleware } = require('http-proxy-middleware'); // Proxy middleware
 const jwtSecret="Hello its my first Mern Stack Project" 
 
 const CLIENT_ID = process.env.CLIENT_ID; 
