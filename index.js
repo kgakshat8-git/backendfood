@@ -132,7 +132,7 @@ app.use('/api/payment', createProxyMiddleware({
             res.json(session);
         } catch (error) {
             console.error('Error creating Stripe session:', error);
-            res.status(500).send('Internal Server Error');
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     },
     onProxyRes: (proxyRes, req, res) => {
@@ -141,6 +141,12 @@ app.use('/api/payment', createProxyMiddleware({
         proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
         proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
     },
+    onError: (err, req, res) => {
+        console.error('Proxy error:', err);
+        res.status(500).json({ error: 'Proxy Error' });
+    },
+    timeout: 10000, // increase timeout to 10 seconds
+    proxyTimeout: 10000 // increase proxy timeout to 10 seconds
 }));
 
 app.use('/api',require('./Routes/Mailclient'))
