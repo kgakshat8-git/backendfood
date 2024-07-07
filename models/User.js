@@ -4,7 +4,7 @@ const Schema1=mongoose.Schema;  //const{Schema}=mongoose
 const UserSchema=new Schema1({
     name:{
         type: String,
-        required: true
+        required: [true, "please provide a username"]
     },
     location:{
         type: String,
@@ -12,7 +12,8 @@ const UserSchema=new Schema1({
     },
     email:{
         type:String,
-        required:true
+        required:[true, "please provide a valid email"],
+        unique:true
     },
     password:{
         type:String,

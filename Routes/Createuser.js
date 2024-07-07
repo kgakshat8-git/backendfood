@@ -6,6 +6,7 @@ const {body,validationResult}=require('express-validator')
 const jwt=require("jsonwebtoken")
 //const bcrypt=require("bcryptjs")
 
+
 const jwtSecret="Hello its my first Mern Stack Project" //secret code
 router.post('/createuser',[
     body('email').isEmail(),
@@ -51,7 +52,7 @@ router.post('/loginuser', async (req,res)=>{
         const authToken=jwt.sign(data,jwtSecret)
 
         //console.log(userData)
-        return res.json({success:"milgaya", authToken:authToken,mailid:email});
+        return res.json({success:"milgaya", authToken:authToken, mailid:userData.email, name1:userData.name});
         }     
     catch(err){
     console.log(err);
