@@ -17,6 +17,7 @@ const client = new OAuth2Client(CLIENT_ID);
 console.log(client)
 
 app.use(cors());
+app.options('/api/payment', cors());
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*"); // * Allows requests from any origin
     res.header(
@@ -93,6 +94,7 @@ app.post('/api/auth/google', async (req, res) => {
         res.status(401).json({ success: 'nhi', message: 'Invalid token' });
     }
 });
+
 
 
 app.post('/api/payment', async(req,res)=>{
