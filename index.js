@@ -5,7 +5,7 @@ mongoodb();
 const abc = require("./Routes/Createuser");
 const cors = require('cors');
 const { OAuth2Client } = require('google-auth-library'); // being used for g-verification
-require('dotenv').conf
+require('dotenv').config();
 const User = require('./models/User');
 const jwt = require("jsonwebtoken");
 const stripe = require('stripe')(process.env.STRIPE_KEY); // used for payment
@@ -95,7 +95,7 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 // Proxy for /api/payment endpoint
-app.post('/api/payment', createProxyMiddleware({
+app.use('/api/payment', createProxyMiddleware({
     target: 'https://backendfood-mt6q.onrender.com',
     changeOrigin: true,
     pathRewrite: {
@@ -107,6 +107,16 @@ app.post('/api/payment', createProxyMiddleware({
         proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
         proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
     },
+    onError: (err, req, res) => {
+        console.error('Proxy error:', err);
+        res.status(500).json({ error: 'Proxy error', details: err.message });
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log('Proxying request:', req.method, req.url);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+        console.log('Proxy response received:', proxyRes.statusCode);
+    }
 }));
 
 app.use('/api', require('./Routes/Mailclient'));
