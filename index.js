@@ -5,16 +5,17 @@ mongoodb();
 const abc = require("./Routes/Createuser");
 const cors = require('cors');
 const { OAuth2Client } = require('google-auth-library'); // being used for g-verification
-require('dotenv').config();
-const User=require('./models/User');
-const jwt=require("jsonwebtoken")
-const stripe =require('stripe') (process.env.STRIPE_KEY) //used for payment
+require('dotenv').conf
+const User = require('./models/User');
+const jwt = require("jsonwebtoken");
+const stripe = require('stripe')(process.env.STRIPE_KEY); // used for payment
+const { createProxyMiddleware } = require('http-proxy-middleware'); // Proxy middleware
 
-const jwtSecret="Hello its my first Mern Stack Project" 
+const jwtSecret = "Hello its my first Mern Stack Project";
 
-const CLIENT_ID = process.env.CLIENT_ID; 
+const CLIENT_ID = process.env.CLIENT_ID;
 const client = new OAuth2Client(CLIENT_ID);
-console.log(client)
+console.log(client);
 
 app.use(cors());
 app.options('*', cors());
@@ -23,12 +24,12 @@ app.use((req, res, next) => {
     res.header(
         "Access-Control-Allow-Methods",
         "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-    ); 
+    );
     res.header(
         "Access-Control-Allow-Headers",
         "Origin, X-Requested-With, Content-Type, Accept"
     );
-    res.header('Referrer-Policy', 'no-referrer-when-downgrade'); 
+    res.header('Referrer-Policy', 'no-referrer-when-downgrade');
     next();
 });
 
@@ -41,7 +42,7 @@ app.get('/funny', (req, res) => {
 });
 
 app.use(express.json()); // Make JSON format input available in req.body
-app.use('/api',abc);
+app.use('/api', abc);
 app.use('/api', require('./Routes/Displaydata'));
 app.use('/api', require('./Routes/OrderData'));
 
@@ -54,83 +55,61 @@ app.post('/api/auth/google', async (req, res) => {
             audience: CLIENT_ID,
         });
         const payload = ticket.getPayload();
-        
+
         console.log('Google Sign-In Success:', payload);
-        
-        let gmail=payload.email;
+
+        let gmail = payload.email;
         console.log(payload.email);
-        let gmaildata= await User.findOne({email:gmail});
-        if(!gmaildata){
-            try{
+        let gmaildata = await User.findOne({ email: gmail });
+        if (!gmaildata) {
+            try {
                 await User.create({
-                     name:payload.name,
-                     email:gmail,
-                     password:"default",
-                     location:"Default",
-                 })
-                 console.log("naya gmail hai");
-                 res.json({ success: true});
-         
-                 }
-             catch(err){
-             console.log(err);
-             res.json({success:"gadbadgoogle"})
-             }
-        }
-        else{
-            console.log("pehle se hai");
-                const data={
-                user:{
-                    id:gmaildata.id
-                }
+                    name: payload.name,
+                    email: gmail,
+                    password: "default",
+                    location: "Default",
+                });
+                console.log("naya gmail hai");
+                res.json({ success: true });
+
+            } catch (err) {
+                console.log(err);
+                res.json({ success: "gadbadgoogle" });
             }
-            const authToken=jwt.sign(data,jwtSecret)
-    
+        } else {
+            console.log("pehle se hai");
+            const data = {
+                user: {
+                    id: gmaildata.id
+                }
+            };
+            const authToken = jwt.sign(data, jwtSecret);
+
             //console.log(userData)
-            res.json({success:false, authToken:authToken, mailid:gmail, name1:payload.given_name});
-            }     
+            res.json({ success: false, authToken: authToken, mailid: gmail, name1: payload.given_name });
+        }
     } catch (error) {
         console.log('Google Sign-In Error:', error);
         res.status(401).json({ success: 'nhi', message: 'Invalid token' });
     }
 });
 
+// Proxy for /api/payment endpoint
+app.post('/api/payment', createProxyMiddleware({
+    target: 'https://backendfood-mt6q.onrender.com',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api/payment': '/api/payment',
+    },
+    onProxyRes: (proxyRes, req, res) => {
+        // Add CORS headers to proxy response
+        proxyRes.headers['Access-Control-Allow-Origin'] = 'https://justeatind-akshat-kumar-guptas-projects.vercel.app';
+        proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
+        proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
+    },
+}));
 
-
-app.post('/api/payment', async(req,res)=>{
-    const product = await stripe.products.create({
-        name:"Paying to EatIndia"
-    })
-
-    if(product){
-        var price = await stripe.prices.create({
-            product:`${product.id}`,
-            unit_amount:req.body.totalamt*100,
-            currency:'inr'
-
-        })
-    }
-    if(price.id){
-        var session= await stripe.checkout.sessions.create({
-            line_items:[
-            {
-                price:`${price.id}`,
-                quantity:1
-            }
-            ],
-            mode:'payment',
-            success_url:'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentsuccess',
-            cancel_url:'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentfailed',
-            customer_email:req.body.mailid
-        }
-
-        )}
-        res.json(session)
-
-})
-
-app.use('/api',require('./Routes/Mailclient'))
-
+app.use('/api', require('./Routes/Mailclient'));
 
 const PORT = 5000;
 app.listen(PORT, () => {

@@ -17,6 +17,7 @@
     "express-session": "^1.18.0",
     "express-validator": "^7.1.0",
     "google-auth-library": "^9.11.0",
+    "http-proxy-middleware": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^5.13.19",
     "nodemailer": "^6.9.14",
