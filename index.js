@@ -8,7 +8,8 @@ const { OAuth2Client } = require('google-auth-library'); // being used for g-ver
 require('dotenv').config();
 const User=require('./models/User');
 const jwt=require("jsonwebtoken")
-
+const stripe =require('stripe') (process.env.STRIPE_KEY) //used for payment
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const jwtSecret="Hello its my first Mern Stack Project" 
 
 const CLIENT_ID = process.env.CLIENT_ID; 
@@ -17,9 +18,6 @@ console.log(client)
 
 app.use(cors());
 app.options('*', cors());
-
-const stripe =require('stripe') (process.env.STRIPE_KEY) //used for payment
-
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*"); // * Allows requests from any origin
     res.header(
@@ -98,55 +96,52 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 
+app.use('/api/payment', createProxyMiddleware({
+    target: 'https://backendfood-mt6q.onrender.com',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api/payment': '/api/payment',
+    },
+    onProxyReq: async (proxyReq, req, res) => {
+        try {
+            const product = await stripe.products.create({
+                name: "Paying to EatIndia"
+            });
 
-
-
-
-
-
-app.post('/api/payment', async(req,res)=>{
-
-    res.setHeader("Access-Control-Allow-Origin", "*");
-        res.header(
-            "Access-Control-Allow-Methods",
-            "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-        );
-        res.header(
-            "Access-Control-Allow-Headers",
-            "Origin, X-Requested-With, Content-Type, Accept"
-        );
-
-
-    const product = await stripe.products.create({
-        name:"Paying to EatIndia"
-    })
-
-    if(product){
-        var price = await stripe.prices.create({
-            product:`${product.id}`,
-            unit_amount:req.body.totalamt*100,
-            currency:'inr'
-
-        })
-    }
-    if(price.id){
-        var session= await stripe.checkout.sessions.create({
-            line_items:[
-            {
-                price:`${price.id}`,
-                quantity:1
+            if (product) {
+                var price = await stripe.prices.create({
+                    product: `${product.id}`,
+                    unit_amount: req.body.totalamt * 100,
+                    currency: 'inr'
+                });
             }
-            ],
-            mode:'payment',
-            success_url:'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentsuccess',
-            cancel_url:'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentfailed',
-            customer_email:req.body.mailid
+
+            if (price.id) {
+                var session = await stripe.checkout.sessions.create({
+                    line_items: [{
+                        price: `${price.id}`,
+                        quantity: 1
+                    }],
+                    mode: 'payment',
+                    success_url: 'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentsuccess',
+                    cancel_url: 'https://justeatind-akshat-kumar-guptas-projects.vercel.app/paymentfailed',
+                    customer_email: req.body.mailid
+                });
+            }
+
+            res.json(session);
+        } catch (error) {
+            console.error('Error creating Stripe session:', error);
+            res.status(500).send('Internal Server Error');
         }
-
-        )}
-        res.json(session)
-
-})
+    },
+    onProxyRes: (proxyRes, req, res) => {
+        // Add CORS headers to proxy response
+        proxyRes.headers['Access-Control-Allow-Origin'] = 'https://justeatind-akshat-kumar-guptas-projects.vercel.app';
+        proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
+        proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
+    },
+}));
 
 app.use('/api',require('./Routes/Mailclient'))
 
