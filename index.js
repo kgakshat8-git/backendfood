@@ -8,7 +8,7 @@ const { OAuth2Client } = require('google-auth-library'); // being used for g-ver
 require('dotenv').config();
 const User=require('./models/User');
 const jwt=require("jsonwebtoken")
-const { createProxyMiddleware } = require('http-proxy-middleware'); // Proxy middleware
+
 const jwtSecret="Hello its my first Mern Stack Project" 
 
 const CLIENT_ID = process.env.CLIENT_ID; 
@@ -99,36 +99,24 @@ app.post('/api/auth/google', async (req, res) => {
 
 
 
-app.use('/api', createProxyMiddleware({
-    target: 'https://backendfood-mt6q.onrender.com',
-    changeOrigin: true,
-    pathRewrite: {
-        '^/api/payment': '/api/payment',
-    },
-    onProxyRes: (proxyRes, req, res) => {
-        // Add CORS headers to proxy response
-        proxyRes.headers['Access-Control-Allow-Origin'] = 'https://justeatind-akshat-kumar-guptas-projects.vercel.app';
-        proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
-        proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
-    },
-    onError: (err, req, res) => {
-        console.error('Proxy error:', err);
-        res.status(500).json({ error: 'Proxy error', details: err.message });
-    },
-    onProxyReq: (proxyReq, req, res) => {
-        console.log('Proxying request:', req.method, req.url);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-        console.log('Proxy response received:', proxyRes.statusCode);
-    }
-}));
-
 
 
 
 
 
 app.post('/api/payment', async(req,res)=>{
+
+    res.setHeader("Access-Control-Allow-Origin", "https://justeatind-akshat-kumar-guptas-projects.vercel.app");
+        res.header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+        );
+        res.header(
+            "Access-Control-Allow-Headers",
+            "Origin, X-Requested-With, Content-Type, Accept"
+        );
+
+
     const product = await stripe.products.create({
         name:"Paying to EatIndia"
     })
