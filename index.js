@@ -17,7 +17,7 @@ const client = new OAuth2Client(CLIENT_ID);
 console.log(client)
 
 app.use(cors());
-app.options('/api/payment', cors());
+app.options('*', cors());
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*"); // * Allows requests from any origin
     res.header(
