@@ -126,8 +126,8 @@ app.post('/api/payment', async (req, res) => {
 
         res.json({ url: session.url });
     } catch (error) {
-        console.error('Error creating checkout session:', error);
-        res.status(500).send('Internal Server Error');
+        console.log('Error creating checkout session:', error);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 app.use('/api',require('./Routes/Mailclient'))

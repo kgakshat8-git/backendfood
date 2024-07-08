@@ -52,11 +52,11 @@ router.post('/loginuser', async (req,res)=>{
         const authToken=jwt.sign(data,jwtSecret)
 
         //console.log(userData)
-        return res.json({success:"milgaya", authToken:authToken, mailid:userData.email, name1:userData.name});
+        return res.json({success:true, authToken:authToken, mailid:userData.email, name1:userData.name});
         }     
     catch(err){
     console.log(err);
-    res.json({success:"nhimila"});
+    res.json({success:false});
     }
 })
 module.exports=router
